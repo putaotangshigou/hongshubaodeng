@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单音听记训练</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        /* 全局按钮样式，移除所有按钮的焦点框 */
+        button {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        button:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        button:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        /* 容器样式 */
+        .container {
+            background: white; /* 背景颜色 */
+            border-radius: 16px; /* 圆角 */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1); /* 阴影效果 */
+            padding: 16px; /* 内边距 */
+            max-width: 500px; /* 最大宽度 */
+            width: 100%; /* 宽度 */
+            position: relative; /* 相对定位 */
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .info-grid,
+            .stats-grid {
+                padding: 12px;
+            }
+            
+            .info-label {
+                font-size: 12px;
+            }
+            
+            .info-value {
+                font-size: 24px;
+            }
+            
+            .staff-container {
+                height: 130px;
+            }
+            
+            .staff {
+                width: 250px;
+                height: 100px;
+            }
+            
+            .clef {
+                width: 30px;
+                height: 60px;
+            }
+            
+            .note {
+                width: auto;
+                height: 12px;
+            }
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo {
+            width: 48px;
+            height: 48px;
+        }
+        
+        h1 {
+            font-size: 20px;
+            color: #333;
+            margin: 0;
+        }
+        
+        .info-grid {
+            display: grid; /* 使用网格布局 */
+            grid-template-columns: 1fr 1fr; /* 两列等宽布局 */
+            gap: 12px; /* 网格间距 */
+            margin-bottom: 12px; /* 底部外边距 */
+            padding: 12px; /* 内边距 */
+            background: #f8f9fa; /* 背景颜色 */
+            border-radius: 8px; /* 圆角 */
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .staff-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 130px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        
+        .staff {
+            position: relative;
+            width: 250px;
+            height: 120px;
+        }
+        
+        .staff-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: black;
+        }
+        
+        .clef {
+            position: absolute;
+            transform: translate(0, -50%);
+        }
+        
+        .treble-clef {
+            left: 5px;
+            top: 56px;
+            width: auto;
+            height: 82px;
+        }
+        
+        .bass-clef {
+            left: 5px;
+            top: 51px;
+            width: auto;
+            height: 40px;
+        }
+        
+        .note {
+            position: absolute;
+            width: auto;
+            height: 12px;
+            transform: translate(-50%, -50%);
+        }
+        
+        .accidental {
+            position: absolute;
+            width: auto;
+            height: 20px;
+            transform: translate(-50%, -50%);
+        }
+        
+        .ledger-line {
+            position: absolute;
+            left: 112px;
+            height: 1px;
+            width: 28px;
+            background: black;
+        }
+        
+        @media (max-width: 480px) {
+            .ledger-line {
+                left: 112px;
+                height: 1px;
+                width: 28px;
+            }
+        }
+        
+        /* 播放和提交按钮 */
+        .control-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .control-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .play-button {
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .play-button:hover {
+            background: #5a6fd8;
+        }
+        
+        .play-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .submit-button {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .submit-button:hover {
+            background: #c0392b;
+        }
+        
+        .submit-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        /* 钢琴键样式 */
+        .piano-container {
+            margin-bottom: 16px;
+        }
+        
+        .piano-row {
+            position: relative;
+            display: flex;
+            margin-bottom: 12px;
+            height: 70px;
+        }
+        
+        .key-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        .white-key {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 8px 8px;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 4px;
+            font-size: 12px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .white-key:hover {
+            background: #f0f0f0;
+        }
+        
+        .white-key:active {
+            background: #e0e0e0;
+        }
+        
+        .black-key {
+            position: absolute;
+            left: 70%;
+            top: 0;
+            width: 60%;
+            height: 63%;
+            background: #333;
+            border-radius: 0 0 6px 6px;
+            z-index: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 6px;
+            font-size: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .black-key:hover {
+            background: #555;
+        }
+        
+        .black-key:active {
+            background: #777;
+        }
+        
+        .settings-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background: #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+        }
+        
+        .settings-menu {
+            position: absolute;
+            top: 60px;
+            right: 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            padding: 12px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .settings-menu.show {
+            display: block;
+        }
+        
+        .settings-menu button {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        
+        .settings-menu button:hover {
+            background: #f0f0f0;
+        }
+        
+        .settings-menu button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .name-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .modal-content h2 {
+            margin-bottom: 24px;
+            color: #333;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .modal-content button {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .modal-content button:hover {
+            background: #5a6fd8;
+        }
+        
+        .error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,0,0,0.9);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .success-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(39, 174, 96, 0.9);
+            color: white;
+            padding: 24px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+        }
+        
+        @keyframes flash-red {
+            0% { background: #f8f9fa; }
+            50% { background: #e74c3c; }
+            100% { background: #f8f9fa; }
+        }
+        
+        @keyframes flash-green {
+            0% { background: #f8f9fa; }
+            50% { background: #27ae60; }
+            100% { background: #f8f9fa; }
+        }
+        
+        .flash-red {
+            animation: flash-red 0.5s ease;
+        }
+        
+        .flash-green {
+            animation: flash-green 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 姓名输入模态框 -->
+    <div class="name-modal" id="nameModal">
+        <div class="modal-content">
+            <h2>请输入您的姓名</h2>
+            <input type="text" id="nameInput" placeholder="请输入姓名" required>
+            <button id="confirmName">确定</button>
+        </div>
+    </div>
+    
+    <!-- 错误提示 -->
+    <div class="error-message" id="errorMessage">🙄错误！</div>
+    
+    <!-- 正确提示 -->
+    <div class="success-message" id="successMessage">😁正确！</div>
+    
+    <div class="container" id="container">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <div class="header-left">
+                <img src="pic/logo.svg" alt="Logo" class="logo">
+                <h1>单音听记</h1>
+            </div>
+            <button class="settings-button" id="settingsButton">
+                <img src="pic/setting.svg" alt="设置" style="width: 24px; height: 24px;">
+            </button>
+        </div>
+        
+        <!-- 设置菜单 -->
+        <div class="settings-menu" id="settingsMenu">
+            <div style="margin-bottom: 8px; font-size: 14px; font-weight: bold;">难度</div>
+            <button class="key-option" data-key="white">白键</button>
+            <button class="key-option" data-key="black">黑键</button>
+            <button class="key-option active" data-key="mixed">混合</button>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+                <div style="margin-bottom: 8px; font-size: 14px; font-weight: bold;">音域范围</div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                    <label for="highNote">最高音:</label>
+                    <select id="highNote" style="padding: 4px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="C3">c¹</option>
+                        <option value="D3">d¹</option>
+                        <option value="E3">e¹</option>
+                        <option value="F3">f¹</option>
+                        <option value="G3">g¹</option>
+                        <option value="A3">a¹</option>
+                        <option value="B3">b¹</option>
+                        <option value="C4">c²</option>
+                        <option value="D4">d²</option>
+                        <option value="E4">e²</option>
+                        <option value="F4">f²</option>
+                        <option value="G4">g²</option>
+                        <option value="A4" selected>a²</option>
+                    </select>
+                </div>
+                <br>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label for="lowNote">最低音:</label>
+                    <select id="lowNote" style="padding: 4px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="A2" selected>a</option>
+                        <option value="B2">b</option>
+                        <option value="C3">c¹</option>
+                        <option value="D3">d¹</option>
+                        <option value="E3">e¹</option>
+                        <option value="F3">f¹</option>
+                        <option value="G3">g¹</option>
+                        <option value="A3">a¹</option>
+                        <option value="B3">b¹</option>
+                        <option value="C4">c²</option>
+                        <option value="D4">d²</option>
+                        <option value="E4">e²</option>
+                        <option value="F4">f²</option>
+                        <option value="G4">g²</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+                <div style="margin-bottom: 8px; font-size: 14px; font-weight: bold;">播放速度</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="range" id="playbackSpeed" min="30" max="240" value="60" style="flex: 1;">
+                    <span id="speedValue" style="width: 40px; text-align: right;">60</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">姓名</div>
+                <div class="info-value" id="userName" style="font-size: 24px;">请输入姓名</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">当前时间</div>
+                <div class="info-value" id="currentTime" style="font-size: 13px; white-space: pre-line; text-align: left;">2026年5月25日 20:20:20</div>
+            </div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="info-item">
+                <div class="info-label">当前题数</div>
+                <div class="info-value" id="currentQuestion">1</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">正确题数</div>
+                <div class="info-value" id="correctCount">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">正确率</div>
+                <div class="info-value" id="accuracy">0%</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">连对个数</div>
+                <div class="info-value" id="consecutiveCorrect">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">平均遍数</div>
+                <div class="info-value" id="averagePlays">0.000</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">难度</div>
+                <div class="info-value" id="difficulty" style="font-size: 13px;">混合 (a - a²)</div>
+            </div>
+        </div>
+        
+        <div class="staff-container" id="staffContainer">
+            <div class="staff" id="staff">
+                <!-- 五线谱线 -->
+                <div class="staff-line" style="top: 30px;"></div>
+                <div class="staff-line" style="top: 42px;"></div>
+                <div class="staff-line" style="top: 54px;"></div>
+                <div class="staff-line" style="top: 66px;"></div>
+                <div class="staff-line" style="top: 78px;"></div>
+                
+                <!-- 谱号 -->
+                <img src="pic/gyph.svg" class="clef treble-clef" id="clefImage">
+                
+                <!-- 升降号 -->
+                <img src="pic/s.svg" class="accidental" id="accidentalImage" style="display: none;">
+                
+                <!-- 音符 -->
+                <img src="pic/yf.svg" class="note" id="noteImage" style="display: none;">
+            </div>
+        </div>
+        
+        <!-- 控制按钮 -->
+        <div class="control-buttons">
+            <button class="play-button" id="playButton">
+                <img src="pic/play.svg" alt="播放" style="width: 20px; height: 20px;">
+                播放
+            </button>
+            <button class="submit-button" id="submitButton" disabled>提交</button>
+        </div>
+        
+        <!-- 钢琴键 -->
+        <div class="piano-container">
+            <!-- 第一排钢琴键 -->
+            <div class="piano-row" id="pianoRow1">
+                <div class="key-container">
+                    <div class="white-key" data-note="A2">a</div>
+                    <div class="black-key" data-note="Bb2"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="B2">b</div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="C3">c¹</div>
+                    <div class="black-key" data-note="C#3"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="D3">d¹</div>
+                    <div class="black-key" data-note="D#3"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="E3">e¹</div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="F3">f¹</div>
+                    <div class="black-key" data-note="F#3"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="G3">g¹</div>
+                    <div class="black-key" data-note="G#3"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="A3">a¹</div>
+                </div>
+            </div>
+            
+            <!-- 第二排钢琴键 -->
+            <div class="piano-row" id="pianoRow2">
+                <div class="key-container">
+                    <div class="white-key" data-note="A3">a¹</div>
+                    <div class="black-key" data-note="Bb3"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="B3">b¹</div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="C4">c²</div>
+                    <div class="black-key" data-note="C#4"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="D4">d²</div>
+                    <div class="black-key" data-note="D#4"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="E4">e²</div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="F4">f²</div>
+                    <div class="black-key" data-note="F#4"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="G4">g²</div>
+                    <div class="black-key" data-note="G#4"></div>
+                </div>
+                <div class="key-container">
+                    <div class="white-key" data-note="A4">a²</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 全局变量
+        let userName = "";
+        let currentKey = "mixed"; // white, black, mixed
+        let currentQuestion = 1;
+        let correctCount = 0;
+        let consecutiveCorrect = 0;
+        let totalPlays = 0; // 总播放次数
+        let startTime = 0;
+        let currentNote = null;
+        let userSelectedNote = null; // 用户选择的音符
+        let audioCache = {}; // 音频缓存
+        let imageCache = {}; // 图片缓存
+        let recentNotes = []; // 记录最近出的题目
+        let hasPlayed = false; // 是否已播放
+        let repeatNote = null; // 重复的音符（当答错时）
+        let playbackSpeed = 60; // 播放速度，默认60
+        let currentAudios = []; // 当前正在播放的音频
+        let isFirstLoad = true; // 首次打开界面的标志
+        let stopA1Timer = null; // 停止13.mp3的定时器ID
+        let fadeIntervals = []; // 存储所有淡出动画的interval ID
+        
+        // 加载重试函数
+        function loadWithRetry(url, type, maxRetries = 10, retryDelay = 500) {
+            return new Promise((resolve, reject) => {
+                let retries = 0;
+                
+                function attemptLoad() {
+                    if (type === 'image') {
+                        const img = new Image();
+                        img.onload = () => resolve(img);
+                        img.onerror = () => {
+                            retries++;
+                            if (retries < maxRetries) {
+                                setTimeout(attemptLoad, retryDelay);
+                            } else {
+                                reject(new Error(`图片加载失败: ${url}`));
+                            }
+                        };
+                        img.src = url;
+                    } else if (type === 'audio') {
+                        const audio = new Audio();
+                        audio.addEventListener('canplaythrough', () => resolve(audio));
+                        audio.addEventListener('error', () => {
+                            retries++;
+                            if (retries < maxRetries) {
+                                setTimeout(attemptLoad, retryDelay);
+                            } else {
+                                reject(new Error(`音频加载失败: ${url}`));
+                            }
+                        });
+                        audio.src = url;
+                    }
+                }
+                
+                attemptLoad();
+            });
+        }
+        
+        // 为现有图片添加重试功能
+        function addImageRetry(imageElement, maxRetries = 10) {
+            let retryCount = 0;
+            const originalSrc = imageElement.src;
+            
+            function attemptLoad() {
+                imageElement.src = originalSrc + '?t=' + Date.now();
+            }
+            
+            imageElement.addEventListener('error', function() {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    attemptLoad();
+                }
+            });
+        }
+        
+        // 淡出音频函数
+        function fadeOutAudio(audio) {
+            if (!audio || audio.ended) return;
+            
+            let volume = 1.0;
+            const fadeDuration = 100; // 淡出时间（毫秒）
+            const fadeSteps = 10;
+            const stepDuration = fadeDuration / fadeSteps;
+            
+            const fadeInterval = setInterval(function() {
+                volume -= 1.0 / fadeSteps;
+                if (volume <= 0) {
+                    clearInterval(fadeInterval);
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = 1.0; // 重置音量
+                } else {
+                    audio.volume = volume;
+                }
+            }, stepDuration);
+        }
+        
+        // 音符位置映射（相对于五线谱的top值）
+        const notePositions = {
+            "A2": 102,  // 小字组A（下加二线）
+            "Bb2": 96, // 小字组Bb（b二间）
+            "B2": 96,  // 小字组B（下加二间）
+            "C3": 90,  // 小字一组C（下加一线）
+            "C#3": 90, // 小字一组C#（下加一线）
+            "D3": 84, // 小字一组D（下加一间）
+            "D#3": 84, // 小字一组D#（下加一间）
+            "E3": 78, // 小字一组E（一线）
+            "F3": 72, // 小字一组F（一间）
+            "F#3": 72, // 小字一组F#（一间）
+            "G3": 66, // 小字一组G（二线）
+            "G#3": 66, // 小字一组G#（二线）
+            "A3": 60, // 小字一组A（二间）
+            "Bb3": 54, // 小字一组Bb（三线）
+            "B3": 54, // 小字一组B（三线）
+            "C4": 48, // 小字二组C（三间）
+            "C#4": 48, // 小字二组C#（三间）
+            "D4": 42, // 小字二组D（四线）
+            "D#4": 42, // 小字二组D#（四线）
+            "E4": 36, // 小字二组E（四间）
+            "F4": 30, // 小字二组F（五线）
+            "F#4": 30, // 小字二组F#（五线）
+            "G4": 24, // 小字二组G（上加一间）
+            "G#4": 24, // 小字二组G#（上加一间）
+            "A4": 18, // 小字二组A（上加一线）
+        };
+        
+        // 音符到音频文件编号的映射
+        const noteToAudioMap = {
+            "A2": 1,    // 小字组A
+            "Bb2": 2,   // 小字组Bb
+            "B2": 3,    // 小字组B
+            "C3": 4,    // 小字一组C
+            "C#3": 5,   // 小字一组C#
+            "D3": 6,    // 小字一组D
+            "D#3": 7,   // 小字一组D#
+            "E3": 8,    // 小字一组E
+            "F3": 9,    // 小字一组F
+            "F#3": 10,  // 小字一组F#
+            "G3": 11,   // 小字一组G
+            "G#3": 12,  // 小字一组G#
+            "A3": 13,   // 小字一组A
+            "Bb3": 14,  // 小字一组Bb
+            "B3": 15,   // 小字一组B
+            "C4": 16,   // 小字二组C
+            "C#4": 17,  // 小字二组C#
+            "D4": 18,   // 小字二组D
+            "D#4": 19,  // 小字二组D#
+            "E4": 20,   // 小字二组E
+            "F4": 21,   // 小字二组F
+            "F#4": 22,  // 小字二组F#
+            "G4": 23,   // 小字二组G
+            "G#4": 24,  // 小字二组G#
+            "A4": 25    // 小字二组A
+        };
+        
+        // 预加载音频
+        async function preloadAudio() {
+            const audioFiles = ['music/13.mp3'];
+            for (let i = 1; i <= 25; i++) {
+                audioFiles.push(`music/${i}.mp3`);
+            }
+            
+            for (const file of audioFiles) {
+                try {
+                    const audio = await loadWithRetry(file, 'audio');
+                    audioCache[file] = audio;
+                } catch (error) {
+                    console.log(`预加载 ${file} 失败:`, error);
+                }
+            }
+            console.log('音频预加载完成');
+        }
+        
+        async function preloadImages() {
+            const imageFiles = [
+                'pic/yf.svg',
+                'pic/s.svg',
+                'pic/j.svg',
+                'pic/gyph.svg'
+            ];
+            
+            for (const file of imageFiles) {
+                try {
+                    const img = await loadWithRetry(file, 'image');
+                    imageCache[file] = img;
+                } catch (error) {
+                    console.log(`预加载 ${file} 失败:`, error);
+                }
+            }
+            console.log('图片预加载完成');
+        }
+        
+        // 初始化
+        function init() {
+            // 加载之前保存的数据
+            loadData();
+            
+            // 预加载音频和图片
+            preloadAudio();
+            preloadImages();
+            
+            // 绑定事件
+            bindEvents();
+            
+            // 调试信息
+            console.log('init - userName:', userName);
+            console.log('init - userName length:', userName.length);
+            console.log('init - userName is empty:', userName === '');
+            console.log('init - userName is falsy:', !userName);
+            console.log('init - localStorage data:', localStorage.getItem('danyintingjiData'));
+            
+            // 如果没有保存的用户名，显示姓名输入模态框
+            if (userName === '') {
+                console.log('init - Showing name modal');
+                // 显示姓名输入模态框
+                document.getElementById('nameModal').style.display = 'flex';
+            } else {
+                console.log('init - Starting new question');
+                // 如果有用户名，隐藏姓名输入模态框并开始新题目
+                document.getElementById('nameModal').style.display = 'none';
+                startNewQuestion();
+            }
+            
+            // 更新时间
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+        
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            document.getElementById('currentTime').textContent = `${year}年${month}月${day}日\n${hours}:${minutes}:${seconds}`;
+        }
+        
+        // 图片加载失败重试函数
+        function addImageRetry(imageElement, maxRetries = 10) {
+            let retryCount = 0;
+            
+            imageElement.addEventListener('error', function() {
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    console.log(`图片加载失败，正在重试 (${retryCount}/${maxRetries}): ${this.src}`);
+                    
+                    // 重新加载图片，添加时间戳避免缓存
+                    const originalSrc = this.src.split('?')[0];
+                    this.src = originalSrc + '?t=' + Date.now();
+                } else {
+                    console.error(`图片加载失败，已达到最大重试次数: ${this.src}`);
+                }
+            });
+        }
+        
+        // 绑定事件
+        function bindEvents() {
+            // 为所有SVG图片添加加载失败重试功能
+            const svgImages = document.querySelectorAll('img[src$=".svg"]');
+            svgImages.forEach(img => {
+                addImageRetry(img);
+            });
+            
+            // 姓名确认
+            document.getElementById('confirmName').addEventListener('click', function() {
+                const name = document.getElementById('nameInput').value.trim();
+                if (name) {
+                    userName = name;
+                    document.getElementById('userName').textContent = name;
+                    document.getElementById('nameModal').style.display = 'none';
+                    // 保存数据
+                    saveData();
+                    startNewQuestion();
+                }
+            });
+            
+            // 设置按钮
+            document.getElementById('settingsButton').addEventListener('click', function() {
+                const menu = document.getElementById('settingsMenu');
+                menu.classList.toggle('show');
+            });
+            
+            // 键类型选择
+            document.querySelectorAll('.key-option').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.key-option').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    currentKey = this.dataset.key;
+                    
+                    // 重置答题数据
+                    currentQuestion = 1;
+                    correctCount = 0;
+                    consecutiveCorrect = 0;
+                    totalPlays = 0;
+                    recentNotes = []; // 清空最近题目记录
+                    hasPlayed = false;
+                    
+                    // 更新提交按钮状态
+                    document.getElementById('submitButton').disabled = true;
+                    
+                    // 更新统计信息
+                    updateStats();
+                    
+                    // 重新生成题目
+                    startNewQuestion();
+                    
+                    // 关闭设置菜单
+                    document.getElementById('settingsMenu').classList.remove('show');
+                });
+            });
+            
+            // 音域范围选择
+            document.getElementById('lowNote').addEventListener('change', function() {
+                // 重置答题数据
+                currentQuestion = 1;
+                correctCount = 0;
+                consecutiveCorrect = 0;
+                totalPlays = 0;
+                recentNotes = []; // 清空最近题目记录
+                hasPlayed = false;
+                
+                // 更新提交按钮状态
+                document.getElementById('submitButton').disabled = true;
+                
+                // 更新统计信息
+                updateStats();
+                
+                // 重新生成题目
+                startNewQuestion();
+                // 保存数据
+                saveData();
+            });
+            
+            document.getElementById('highNote').addEventListener('change', function() {
+                // 重置答题数据
+                currentQuestion = 1;
+                correctCount = 0;
+                consecutiveCorrect = 0;
+                totalPlays = 0;
+                recentNotes = []; // 清空最近题目记录
+                hasPlayed = false;
+                
+                // 更新提交按钮状态
+                document.getElementById('submitButton').disabled = true;
+                
+                // 更新统计信息
+                updateStats();
+                
+                // 重新生成题目
+                startNewQuestion();
+                // 保存数据
+                saveData();
+            });
+            
+            // 播放速度选择
+            document.getElementById('playbackSpeed').addEventListener('input', function() {
+                playbackSpeed = parseInt(this.value);
+                document.getElementById('speedValue').textContent = playbackSpeed;
+                // 保存数据
+                saveData();
+            });
+            
+            // 为所有图片添加重试功能
+            document.querySelectorAll('img').forEach(img => {
+                addImageRetry(img);
+            });
+            
+            // 播放按钮
+            document.getElementById('playButton').addEventListener('click', async function() {
+                // 清除所有之前的淡出动画
+                fadeIntervals.forEach(interval => clearInterval(interval));
+                fadeIntervals = [];
+                
+                // 检查并淡出所有正在播放的音频
+                currentAudios.forEach(audio => {
+                    // 立即停止音频
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = 1.0;
+                });
+                // 清空当前音频数组
+                currentAudios = [];
+                
+                // 清除之前的停止13.mp3的定时器
+                if (stopA1Timer) {
+                    clearTimeout(stopA1Timer);
+                    stopA1Timer = null;
+                }
+                
+                // 禁用播放按钮并修改文本
+                this.disabled = true;
+                this.innerHTML = '<img src="pic/play.svg" alt="播放" style="width: 20px; height: 20px;"> 播放中...';
+                
+                // 增加总播放次数
+                totalPlays++;
+                
+                // 计算播放间隔（毫秒）
+                // 30=4秒/音，60=2秒/音，120=1秒/音，240=0.5秒/音
+                const interval = (120 / playbackSpeed) * 1000;
+                
+                try {
+                    // 从缓存获取13.mp3
+                    const a1Audio = audioCache['music/13.mp3'] || await loadWithRetry('music/13.mp3', 'audio');
+                    // 确保音频完全重置
+                    a1Audio.pause();
+                    a1Audio.currentTime = 0;
+                    a1Audio.volume = 1.0;
+                    
+                    // 播放13.mp3 - 使用then/catch处理iOS的自动播放限制
+                    const playPromise = a1Audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            console.log('13.mp3音频播放成功');
+                        }).catch(error => {
+                            console.error('13.mp3音频播放失败:', error);
+                        });
+                    }
+                    console.log('播放音频: 13.mp3');
+                    // 添加到当前音频数组
+                    currentAudios.push(a1Audio);
+                    
+                    // 经过指定间隔后播放题目音频
+                    setTimeout(async function() {
+                        try {
+                            // 根据当前生成的音符获取对应的音频文件编号
+                            const audioIndex = noteToAudioMap[currentNote];
+                            // 从缓存获取题目音频
+                            const audio = audioCache[`music/${audioIndex}.mp3`] || await loadWithRetry(`music/${audioIndex}.mp3`, 'audio');
+                            // 播放题目音频
+                            audio.currentTime = 0;
+                            
+                            // 使用then/catch处理iOS的自动播放限制
+                            const playPromise = audio.play();
+                            if (playPromise !== undefined) {
+                                playPromise.then(() => {
+                                    console.log('题目音频播放成功');
+                                }).catch(error => {
+                                    console.error('音频播放失败:', error);
+                                });
+                            }
+                            console.log('播放音频:', `music/${audioIndex}.mp3`);
+                            // 添加到当前音频数组
+                            currentAudios.push(audio);
+                            hasPlayed = true;
+                            // 启用提交按钮
+                            document.getElementById('submitButton').disabled = false;
+                            // 记录开始时间
+                            startTime = Date.now();
+                            
+                            // 35ms后检查13.mp3是否还在播放，如果还在播放就停止
+                            stopA1Timer = setTimeout(function() {
+                                if (!a1Audio.ended) {
+                                    a1Audio.pause();
+                                    a1Audio.currentTime = 0;
+                                }
+                                stopA1Timer = null;
+                            }, 15);
+                            
+                            // 两秒后恢复播放按钮并修改文本
+                            setTimeout(function() {
+                                const playButton = document.getElementById('playButton');
+                                playButton.disabled = false;
+                                playButton.innerHTML = '<img src="pic/play.svg" alt="播放" style="width: 20px; height: 20px;"> 播放';
+                            }, 2000);
+                        } catch (error) {
+                            console.error('题目音频加载失败:', error);
+                            // 两秒后恢复播放按钮
+                            setTimeout(function() {
+                                const playButton = document.getElementById('playButton');
+                                playButton.disabled = false;
+                                playButton.innerHTML = '<img src="pic/play.svg" alt="播放" style="width: 20px; height: 20px;"> 播放';
+                            }, 100);
+                            alert('题目音频加载失败，请稍后再试');
+                        }
+                    }, interval);
+                } catch (error) {
+                    console.error('13.mp3音频加载失败:', error);
+                    // 两秒后恢复播放按钮
+                    setTimeout(function() {
+                        const playButton = document.getElementById('playButton');
+                        playButton.disabled = false;
+                        playButton.innerHTML = '<img src="pic/play.svg" alt="播放" style="width: 20px; height: 20px;"> 播放';
+                    }, 100);
+                    alert('参考音频加载失败，请稍后再试');
+                }
+            });
+            
+            // 提交按钮
+            document.getElementById('submitButton').addEventListener('click', function() {
+                if (!hasPlayed) return;
+                
+                // 检查并淡出所有正在播放的音频
+                currentAudios.forEach(audio => {
+                    fadeOutAudio(audio);
+                });
+                // 清空当前音频数组
+                currentAudios = [];
+                
+                // 检查用户是否选择了音符
+                if (!userSelectedNote) {
+                    alert('请选择一个音符');
+                    return;
+                }
+                
+                // 检查答案是否正确
+                if (userSelectedNote === currentNote) {
+                    correctCount++;
+                    consecutiveCorrect++;
+                    // 显示正确动画
+                    document.getElementById('container').classList.add('flash-green');
+                    setTimeout(() => {
+                        document.getElementById('container').classList.remove('flash-green');
+                    }, 500);
+                    // 显示正确提示
+                    const successMessage = document.getElementById('successMessage');
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 1000);
+                } else {
+                    consecutiveCorrect = 0;
+                    // 显示错误动画
+                    document.getElementById('container').classList.add('flash-red');
+                    setTimeout(() => {
+                        document.getElementById('container').classList.remove('flash-red');
+                    }, 500);
+                    // 显示错误提示
+                    const errorMessage = document.getElementById('errorMessage');
+                    errorMessage.style.display = 'block';
+                    setTimeout(() => {
+                        errorMessage.style.display = 'none';
+                    }, 1000);
+                    // 答错了，下一题继续听上一题的内容
+                    repeatNote = currentNote;
+                }
+                
+                // 更新统计信息
+                currentQuestion++;
+                updateStats();
+                
+                // 开始新题目
+                startNewQuestion();
+                // 保存数据
+                saveData();
+            });
+            
+            // 钢琴键点击
+            document.querySelectorAll('.white-key, .black-key').forEach(key => {
+                key.addEventListener('click', function() {
+                    const note = this.dataset.note;
+                    console.log('选择音符:', note);
+                    
+                    // 更新用户选择的音符
+                    userSelectedNote = note;
+                    
+                    // 显示音符和升降号
+                    const noteImage = document.getElementById('noteImage');
+                    const accidentalImage = document.getElementById('accidentalImage');
+                    
+                    // 检查是否是黑键（带#的音符或Bb）
+                    if (note.includes('#') || note.includes('Bb')) {
+                        // 显示升号或降号
+                        if (note === 'Bb2' || note === 'Bb3' || note === 'Bb4') {
+                            // Bb 显示降号
+                            Promise.resolve(imageCache['pic/j.svg'] || loadWithRetry('pic/j.svg', 'image'))
+                                .then(img => {
+                                    accidentalImage.src = img.src;
+                                    accidentalImage.style.display = 'block';
+                                })
+                                .catch(error => {
+                                    console.error('降号图片加载失败:', error);
+                                });
+                        } else {
+                            // 其他黑键显示升号
+                            Promise.resolve(imageCache['pic/s.svg'] || loadWithRetry('pic/s.svg', 'image'))
+                                .then(img => {
+                                    accidentalImage.src = img.src;
+                                    accidentalImage.style.display = 'block';
+                                })
+                                .catch(error => {
+                                    console.error('升号图片加载失败:', error);
+                                });
+                        }
+                    } else {
+                        // 白键不显示升降号
+                        accidentalImage.style.display = 'none';
+                    }
+                    
+                    // 显示音符
+                    const position = notePositions[note];
+                    if (position !== undefined) {
+                        noteImage.style.top = `${position}px`;
+                        noteImage.style.left = '125px';
+                        noteImage.style.display = 'block';
+                        
+                        // 加载音符图片
+                        Promise.resolve(imageCache['pic/yf.svg'] || loadWithRetry('pic/yf.svg', 'image'))
+                            .then(img => {
+                                noteImage.src = img.src;
+                            })
+                            .catch(error => {
+                                console.error('音符图片加载失败:', error);
+                            });
+                        
+                        // 调整升降号位置，使其与音符对齐
+                        if (note.includes('#') || note.includes('Bb')) {
+                            if (note === 'Bb2' || note === 'Bb3' || note === 'Bb4') {
+                                // 降号略微下移2px
+                                accidentalImage.style.top = `${position - 4}px`;
+                            } else {
+                                // 升号保持原位置
+                                accidentalImage.style.top = `${position}px`;
+                            }
+                            accidentalImage.style.left = '108px';
+                        }
+                    }
+                    
+                    // 清除之前的加线
+                    const existingLedgerLines = document.querySelectorAll('.ledger-line');
+                    existingLedgerLines.forEach(line => line.remove());
+                    
+                    // 添加加线（如果需要）
+                    // 处理低音音符的加线
+                    if (note === 'A2') {
+                        const staff = document.getElementById('staff');
+                        // 下加一线
+                        const ledgerLine1 = document.createElement('div');
+                        ledgerLine1.className = 'ledger-line';
+                        ledgerLine1.style.top = `${90}px`; // 下加一线
+                        staff.appendChild(ledgerLine1);
+                        // 下加二线
+                        const ledgerLine2 = document.createElement('div');
+                        ledgerLine2.className = 'ledger-line';
+                        ledgerLine2.style.top = `${102}px`; // 下加二线
+                        staff.appendChild(ledgerLine2);
+                    } else if (note === 'B2' || note === 'Bb2' || note === 'C3' || note === 'C#3') {
+                        const staff = document.getElementById('staff');
+                        const ledgerLine = document.createElement('div');
+                        ledgerLine.className = 'ledger-line';
+                        ledgerLine.style.top = `${90}px`; // 下加一线
+                        staff.appendChild(ledgerLine);
+                    } 
+                    // 处理高音音符的加线
+                    else if (note === 'A4') {
+                        const staff = document.getElementById('staff');
+                        const ledgerLine = document.createElement('div');
+                        ledgerLine.className = 'ledger-line';
+                        ledgerLine.style.top = `${18}px`; // 上加一线
+                        staff.appendChild(ledgerLine);
+                    } 
+                });
+            });
+            
+            // 点击外部关闭设置菜单
+            document.addEventListener('click', function(event) {
+                const settingsButton = document.getElementById('settingsButton');
+                const settingsMenu = document.getElementById('settingsMenu');
+                if (!settingsButton.contains(event.target) && !settingsMenu.contains(event.target)) {
+                    settingsMenu.classList.remove('show');
+                }
+            });
+        }
+        
+        // 保存数据到本地存储
+        function saveData() {
+            const data = {
+                userName: userName,
+                currentQuestion: currentQuestion,
+                correctCount: correctCount,
+                consecutiveCorrect: consecutiveCorrect,
+                totalPlays: totalPlays,
+                currentNote: currentNote,
+                recentNotes: recentNotes,
+                currentKey: currentKey,
+                lowNote: document.getElementById('lowNote').value,
+                highNote: document.getElementById('highNote').value,
+                playbackSpeed: playbackSpeed,
+                lastSavedDate: new Date().toISOString().split('T')[0] // 使用 ISO 8601 格式的日期字符串
+            };
+            localStorage.setItem('danyintingjiData', JSON.stringify(data));
+        }
+        
+        // 从本地存储加载数据
+        function loadData() {
+            const data = localStorage.getItem('danyintingjiData');
+            console.log('loadData - localStorage data:', data);
+            if (data) {
+                const parsedData = JSON.parse(data);
+                console.log('loadData - parsedData:', parsedData);
+                // 检查是否是新的一天
+                const today = new Date().toISOString().split('T')[0]; // 使用 ISO 8601 格式的日期字符串
+                console.log('loadData - today:', today);
+                console.log('loadData - parsedData.lastSavedDate:', parsedData.lastSavedDate);
+                console.log('loadData - dates match:', parsedData.lastSavedDate === today);
+                if (parsedData.lastSavedDate !== today) {
+                    console.log('loadData - New day branch');
+                    // 新的一天，只保留设置信息，不保留用户名
+                    currentKey = parsedData.currentKey || 'mixed';
+                    document.getElementById('lowNote').value = parsedData.lowNote || 'A2';
+                    document.getElementById('highNote').value = parsedData.highNote || 'A4';
+                    playbackSpeed = parsedData.playbackSpeed || 60;
+                    document.getElementById('playbackSpeed').value = playbackSpeed;
+                    document.getElementById('speedValue').textContent = playbackSpeed;
+                    // 重置所有信息
+                    userName = '';
+                    currentQuestion = 1;
+                    correctCount = 0;
+                    consecutiveCorrect = 0;
+                    totalPlays = 0;
+                    recentNotes = [];
+                    currentNote = null;
+                    // 清空用户姓名
+                    document.getElementById('userName').textContent = '';
+                    // 更新设置按钮状态
+                    document.querySelectorAll('.key-option').forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.dataset.key === currentKey) {
+                            btn.classList.add('active');
+                        }
+                    });
+                } else {
+                    console.log('loadData - Same day branch');
+                    // 同一天，恢复所有信息
+                    userName = parsedData.userName || '';
+                    console.log('loadData - userName from parsedData:', userName);
+                    currentQuestion = parsedData.currentQuestion || 1;
+                    correctCount = parsedData.correctCount || 0;
+                    consecutiveCorrect = parsedData.consecutiveCorrect || 0;
+                    totalPlays = parsedData.totalPlays || 0;
+                    currentNote = parsedData.currentNote || null;
+                    recentNotes = parsedData.recentNotes || [];
+                    currentKey = parsedData.currentKey || 'mixed';
+                    document.getElementById('lowNote').value = parsedData.lowNote || 'A2';
+                    document.getElementById('highNote').value = parsedData.highNote || 'A4';
+                    playbackSpeed = parsedData.playbackSpeed || 60;
+                    document.getElementById('playbackSpeed').value = playbackSpeed;
+                    document.getElementById('speedValue').textContent = playbackSpeed;
+                    // 更新设置按钮状态
+                    document.querySelectorAll('.key-option').forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.dataset.key === currentKey) {
+                            btn.classList.add('active');
+                        }
+                    });
+                    // 更新用户姓名
+                    if (userName) {
+                        document.getElementById('userName').textContent = userName;
+                    }
+                    // 更新统计信息
+                    updateStats();
+                }
+                console.log('loadData - final userName:', userName);
+            }
+        }
+        
+        // 开始新题目
+        function startNewQuestion() {
+            // 记录开始时间
+            startTime = Date.now();
+            hasPlayed = false;
+            userSelectedNote = null; // 重置用户选择的音符
+            // 清空当前音频数组
+            currentAudios = [];
+            
+            // 重置提交按钮状态
+            document.getElementById('submitButton').disabled = true;
+            
+            // 如果currentNote不存在，或者不是首次加载，生成新的音符
+            if (!currentNote || !isFirstLoad) {
+                // 检查是否需要重复上一题
+                if (repeatNote) {
+                    currentNote = repeatNote;
+                    repeatNote = null; // 重置重复音符
+                } else {
+                // 获取设置选项
+                const keyType = currentKey; // white, black, mixed
+                const lowNote = document.getElementById('lowNote').value;
+                const highNote = document.getElementById('highNote').value;
+                
+                // 所有可能的音符
+                const allNotes = ['A2', 'Bb2', 'B2', 'C3', 'C#3', 'D3', 'D#3', 'E3', 'F3', 'F#3', 'G3', 'G#3', 'A3', 'Bb3', 'B3', 'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4'];
+                
+                // 根据键类型过滤音符
+                let filteredNotes = [];
+                if (keyType === 'white') {
+                    // 白键：A2, B2, C3, D3, E3, F3, G3, A3, B3, C4, D4, E4, F4, G4, A4
+                    filteredNotes = allNotes.filter(note => !note.includes('#') && !note.includes('Bb'));
+                } else if (keyType === 'black') {
+                    // 黑键：Bb2, C#3, D#3, F#3, G#3, Bb3, C#4, D#4, F#4, G#4
+                    filteredNotes = allNotes.filter(note => note.includes('#') || note.includes('Bb'));
+                } else { // mixed
+                    filteredNotes = allNotes;
+                }
+                
+                // 根据音域范围过滤音符
+                const lowIndex = allNotes.indexOf(lowNote);
+                const highIndex = allNotes.indexOf(highNote);
+                filteredNotes = filteredNotes.filter(note => {
+                    const noteIndex = allNotes.indexOf(note);
+                    // 排除A3（13.mp3）
+                    return noteIndex >= lowIndex && noteIndex <= highIndex && note !== 'A3';
+                });
+                
+                // 确保至少有4个音的范围
+                if (filteredNotes.length < 4) {
+                    alert('音域范围至少需要包含4个音，请调整范围');
+                    return;
+                }
+                
+                // 随机生成一个音符，确保不重复最近的题目
+                let validNote = false;
+                while (!validNote) {
+                    const randomIndex = Math.floor(Math.random() * filteredNotes.length);
+                    currentNote = filteredNotes[randomIndex];
+                    
+                    // 检查是否与最近的题目重复
+                    let isDuplicate = false;
+                    if (currentQuestion === 2) {
+                        // 第二题不能和第一题一样
+                        if (recentNotes.length > 0 && currentNote === recentNotes[0]) {
+                            isDuplicate = true;
+                        }
+                    } else if (currentQuestion === 3) {
+                        // 第三题不能和第二、第一题一样
+                        if (recentNotes.length >= 2 && (currentNote === recentNotes[0] || currentNote === recentNotes[1])) {
+                            isDuplicate = true;
+                        }
+                    } else if (currentQuestion >= 4) {
+                        // 从第四题开始，不能和前面三个题一样
+                        if (recentNotes.length >= 3 && (currentNote === recentNotes[0] || currentNote === recentNotes[1] || currentNote === recentNotes[2])) {
+                            isDuplicate = true;
+                        }
+                    }
+                    
+                    if (!isDuplicate) {
+                        validNote = true;
+                    }
+                }
+                
+                // 更新最近题目记录
+                recentNotes.unshift(currentNote);
+                // 只保留最近3个题目
+                if (recentNotes.length > 3) {
+                    recentNotes.pop();
+                }
+                
+                console.log('Generated note:', currentNote);
+                console.log('Current key:', currentKey);
+                console.log('Recent notes:', recentNotes);
+                }
+            } else {
+                console.log('Using saved note:', currentNote);
+                console.log('Current key:', currentKey);
+                console.log('Recent notes:', recentNotes);
+                // 如果是首次加载且有保存的题目，将其添加到recentNotes中
+                if (isFirstLoad && currentNote && recentNotes.length === 0) {
+                    recentNotes.unshift(currentNote);
+                }
+                // 首次加载后，将isFirstLoad设置为false，后面的题目随机生成
+                isFirstLoad = false;
+            }
+            
+            // 隐藏音符和升降号
+            document.getElementById('noteImage').style.display = 'none';
+            document.getElementById('accidentalImage').style.display = 'none';
+            
+            // 清除之前的加线
+            const existingLedgerLines = document.querySelectorAll('.ledger-line');
+            existingLedgerLines.forEach(line => line.remove());
+            
+            // 保存数据 - 只有在currentNote不为null时才保存，这样在用户提交答案后，currentNote会被设置为null，下次进入页面时会生成新的题目
+            if (currentNote) {
+                saveData();
+            }
+        }
+        
+        // 检查答案
+        function checkAnswer(selectedNote) {
+            console.log('Current note:', currentNote);
+            console.log('User answer:', selectedNote);
+            
+            if (selectedNote === currentNote) {
+                // 正确
+                correctCount++;
+                consecutiveCorrect++;
+                
+                // 界面闪绿
+                document.getElementById('container').classList.add('flash-green');
+                setTimeout(() => {
+                    document.getElementById('container').classList.remove('flash-green');
+                }, 500);
+                
+                // 进入下一题
+                currentQuestion++;
+                
+                // 更新统计信息
+                updateStats();
+                
+                // 清除当前音符，以便生成新的题目
+                currentNote = null;
+                
+                // 保存数据，此时currentNote为null，下次进入页面时会生成新的题目
+                saveData();
+                
+                startNewQuestion();
+            } else {
+                // 错误
+                consecutiveCorrect = 0;
+                
+                // 界面闪红
+                document.getElementById('container').classList.add('flash-red');
+                setTimeout(() => {
+                    document.getElementById('container').classList.remove('flash-red');
+                }, 500);
+                
+                // 显示错误提示
+                const errorMessage = document.getElementById('errorMessage');
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 1000);
+                
+                // 答错也要增加题数
+                currentQuestion++;
+                
+                // 更新统计信息
+                updateStats();
+                
+                // 清除当前音符，以便生成新的题目
+                currentNote = null;
+                
+                // 保存数据，此时currentNote为null，下次进入页面时会生成新的题目
+                saveData();
+                
+                startNewQuestion();
+            }
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('currentQuestion').textContent = currentQuestion;
+            document.getElementById('correctCount').textContent = correctCount;
+            
+            let accuracy;
+            if (currentQuestion > 1) {
+                const accuracyValue = (correctCount / (currentQuestion - 1)) * 100;
+                if (accuracyValue === 100) {
+                    accuracy = '100';
+                } else {
+                    accuracy = accuracyValue.toFixed(3);
+                }
+            } else {
+                accuracy = '0.000';
+            }
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            document.getElementById('consecutiveCorrect').textContent = consecutiveCorrect;
+            
+            // 计算平均遍数
+            const averagePlays = currentQuestion > 1 ? totalPlays / (currentQuestion - 1) : 0;
+            document.getElementById('averagePlays').textContent = averagePlays.toFixed(3);
+            
+            // 显示难度信息
+            const keyType = currentKey === 'white' ? '白键' : currentKey === 'black' ? '黑键' : '混合';
+            const lowNote = document.getElementById('lowNote').value;
+            const highNote = document.getElementById('highNote').value;
+            
+            // 转换音符显示格式
+            function formatNote(note) {
+                if (note === 'A2') return 'a';
+                if (note === 'B2') return 'b';
+                if (note === 'C3') return 'c¹';
+                if (note === 'D3') return 'd¹';
+                if (note === 'E3') return 'e¹';
+                if (note === 'F3') return 'f¹';
+                if (note === 'G3') return 'g¹';
+                if (note === 'A3') return 'a¹';
+                if (note === 'B3') return 'b¹';
+                if (note === 'C4') return 'c²';
+                if (note === 'D4') return 'd²';
+                if (note === 'E4') return 'e²';
+                if (note === 'F4') return 'f²';
+                if (note === 'G4') return 'g²';
+                if (note === 'A4') return 'a²';
+                return note;
+            }
+            
+            const difficultyText = `${keyType} (${formatNote(lowNote)} - ${formatNote(highNote)})`;
+            document.getElementById('difficulty').textContent = difficultyText;
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>
